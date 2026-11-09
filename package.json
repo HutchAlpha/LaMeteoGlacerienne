@@ -1,0 +1,20 @@
+{
+  "name": "la-meteo-glacerienne",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "FrontEnd",
+    "BackEnd"
+  ],
+  "scripts": {
+    "dev": "concurrently -k -n FrontEnd,BackEnd \"npm:dev --workspace FrontEnd\" \"npm:dev --workspace BackEnd\"",
+    "dev:FrontEnd": "npm run dev --workspace FrontEnd",
+    "dev:BackEnd": "npm run dev --workspace BackEnd",
+    "build": "npm run build --workspace FrontEnd",
+    "lint": "npm run lint --workspace FrontEnd",
+    "preview": "npm run preview --workspace FrontEnd"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
