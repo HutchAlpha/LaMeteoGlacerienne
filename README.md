@@ -23,6 +23,26 @@ Vous allez voir apparaitre  http://localhost:5173/ (l'url du site en local ^^)
 
 # BackEnd
 ```bash
-cd FrontEnd
+cd BackEnd
+php -S localhost:8000
+```
+## Infos pour votre premiére instalation ! 
+Créer un fichier .env dans BackEnd et écrirer ceci  :
 
+```bash
+APP_ENV=local
+
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=apimeteo
+DB_USER=root
+DB_PASS=
+
+APP_ENV=production
+
+DB_HOST= (Mettre votre hébergeur)
+DB_PORT=3306
+DB_NAME= (Mettre votre nom de la BDD)
+DB_USER= (Mettre votre Utilisateur)
+DB_PASS=(Mettre votre Mot de Passse)
 ```
