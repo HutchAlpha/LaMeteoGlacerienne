@@ -45,4 +45,9 @@ DB_PORT=3306
 DB_NAME= (Mettre votre nom de la BDD)
 DB_USER= (Mettre votre Utilisateur)
 DB_PASS=(Mettre votre Mot de Passse)
+
+METEO_API_URL=(Mettre votre URL API)
+Latitude=(Mettre votre Latitude)
+Longitude=(Mettre votre Longitude)
+METEO_API_KEY=(Mettre votre Clé API)
 ```
