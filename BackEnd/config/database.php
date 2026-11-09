@@ -74,51 +74,12 @@ function connexionBdd(array $config): PDO
     );
 }
 
-function obtenirConnexionBdd(): PDO
-{
-    static $pdo = null;
-
-    if ($pdo instanceof PDO) {
-        return $pdo;
-    }
-
-    $configProduction = configurationDepuisEnvironnement('DB_', 'PRODUCTION');
-    $configLocale = configurationDepuisEnvironnement('DB_LOCAL_', 'LOCAL-FALLBACK');
-
-    try {
-        $pdo = connexionBdd($configProduction);
-
-        error_log('Connexion BDD réussie : PRODUCTION');
-
-        return $pdo;
-    } catch (PDOException $e) {
-        error_log('Connexion BDD PRODUCTION impossible : ' . $e->getMessage());
-    }
-
-    try {
-        $pdo = connexionBdd($configLocale);
-
-        error_log('Connexion BDD réussie : LOCAL-FALLBACK');
-
-        return $pdo;
-    } catch (PDOException $e) {
-        error_log('Connexion BDD LOCAL impossible : ' . $e->getMessage());
-
-        throw new RuntimeException(
-            'Impossible de se connecter à la base de données, en ligne comme en local.'
-        );
-    }
-}
-
-chargerVariablesEnvironnement(dirname(__DIR__, 2) . '/.env');
+chargerVariablesEnvironnement(dirname(__DIR__) . '/.env');
 
 try {
-    $pdo = obtenirConnexionBdd();
+    $configuration = configurationDepuisEnvironnement('DB_', valeurEnvironnement('APP_ENV', 'NON DÉFINI'));
+    $pdo = connexionBdd($configuration);
 } catch (Throwable $e) {
-    if (PHP_SAPI === 'cli') {
-        throw $e;
-    }
-
-    http_response_code(500);
-    exit('Erreur de connexion à la base de données.');
+    error_log('Connexion à la base de données impossible : ' . $e->getMessage());
+    throw new RuntimeException('Connexion à la base de données impossible.', 0, $e);
 }

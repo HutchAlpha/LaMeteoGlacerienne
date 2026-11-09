@@ -5,7 +5,12 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/api': 'http://localhost:3000',
+      '/api': {
+        target: 'http://localhost:8000',
+        rewrite: (path) => path
+          .replace(/^\/api\/meteo/, '/config/api.php')
+          .replace(/^\/api\/historique(?=\?|$)/, '/api/historique.php'),
+      },
     },
   },
 })

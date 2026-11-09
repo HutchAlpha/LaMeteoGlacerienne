@@ -4,10 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "node --watch src/server.js",
-    "start": "node src/server.js"
-  },
-  "dependencies": {
-    "express": "^5.1.0"
+    "dev": "php -S 127.0.0.1:8000 -t .",
+    "start": "php -S 127.0.0.1:8000 -t ."
   }
 }

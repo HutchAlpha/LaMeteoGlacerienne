@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+ini_set('display_errors', '0');
+ini_set('log_errors', '1');
+
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 
@@ -128,8 +131,8 @@ function obtenirConnexionBdd(): PDO
 function obtenirConfigurationApiMeteo(): array
 {
     $url = valeurEnvironnement('METEO_API_URL');
-    $latitude = valeurEnvironnement('LATITUDE');
-    $longitude = valeurEnvironnement('LONGITUDE');
+    $latitude = valeurEnvironnement('LATITUDE', valeurEnvironnement('Latitude'));
+    $longitude = valeurEnvironnement('LONGITUDE', valeurEnvironnement('Longitude'));
     $cle = valeurEnvironnement('METEO_API_KEY');
 
     if ($url === '' || $latitude === '' || $longitude === '') {
@@ -153,24 +156,51 @@ function obtenirConfigurationApiMeteo(): array
 function recupererDonneesMeteo(string $ville): array
 {
     $config = obtenirConfigurationApiMeteo();
+    $endpoint = rtrim($config['url'], '/');
 
-    $parametres = http_build_query([
-        'latitude' => $config['latitude'],
-        'longitude' => $config['longitude'],
-        'hourly' => 'temperature_2m,relative_humidity_2m',
-        'timezone' => 'auto',
-    ]);
-
-    $url = $config['url'] . '?' . $parametres;
-
-    // La clé API reste uniquement côté PHP
-    if ($config['cle'] !== '') {
-        $url .= '&apikey=' . urlencode($config['cle']);
+    if (!str_ends_with($endpoint, '/forecast')) {
+        $endpoint .= '/forecast';
     }
 
-    $reponse = file_get_contents($url);
+    $parametres = [
+        'lat' => $config['latitude'],
+        'lon' => $config['longitude'],
+        'units' => 'metric',
+        'lang' => 'fr',
+    ];
 
-    if ($reponse === false) {
+    if ($config['cle'] !== '') {
+        $parametres['appid'] = $config['cle'];
+    }
+
+    $options = stream_context_create([
+        'http' => [
+            'method' => 'GET',
+            'header' => "Accept: application/json\r\n",
+            'timeout' => 12,
+            'ignore_errors' => true,
+        ],
+        'ssl' => [
+            'verify_peer' => true,
+            'verify_peer_name' => true,
+        ],
+    ]);
+
+    $reponse = @file_get_contents(
+        $endpoint . '?' . http_build_query($parametres),
+        false,
+        $options
+    );
+    $statutHttp = 0;
+
+    foreach ($http_response_header ?? [] as $entete) {
+        if (preg_match('/^HTTP\/\S+\s+(\d{3})/', $entete, $correspondance) === 1) {
+            $statutHttp = (int) $correspondance[1];
+        }
+    }
+
+    if ($reponse === false || $statutHttp === 0) {
+        error_log('Échec de la requête HTTPS vers le fournisseur météo.');
         http_response_code(502);
 
         return [
@@ -178,44 +208,62 @@ function recupererDonneesMeteo(string $ville): array
         ];
     }
 
-    $donnees = json_decode($reponse, true);
-
-    if (!is_array($donnees)) {
+    if ($statutHttp < 200 || $statutHttp >= 300) {
+        error_log('Le fournisseur météo a répondu avec le statut HTTP ' . $statutHttp . '.');
         http_response_code(502);
 
         return [
-            'erreur' => 'Réponse météo invalide.',
+            'erreur' => 'Le fournisseur météo a refusé la requête.',
         ];
     }
 
-    // -----------------------------------------------------
-    //! FILTRE AVANT ENVOI AU FRONT / REDUX
-    // -----------------------------------------------------
+    try {
+        $donnees = json_decode($reponse, true, 512, JSON_THROW_ON_ERROR);
+    } catch (JsonException $e) {
+        error_log('Le fournisseur météo a renvoyé un JSON invalide.');
+        http_response_code(502);
+
+        return [
+            'erreur' => 'La réponse du fournisseur météo est invalide.',
+        ];
+    }
+
+    if (!isset($donnees['list']) || !is_array($donnees['list'])) {
+        error_log('La réponse météo ne contient pas les prévisions attendues.');
+        http_response_code(502);
+
+        return [
+            'erreur' => 'La réponse du fournisseur météo est incomplète.',
+        ];
+    }
 
     $resultat = [];
 
-    $dates = $donnees['hourly']['time'] ?? [];
-    $temperatures = $donnees['hourly']['temperature_2m'] ?? [];
-    $humidites = $donnees['hourly']['relative_humidity_2m'] ?? [];
+    foreach ($donnees['list'] as $prevision) {
+        $temperature = $prevision['main']['temp'] ?? null;
+        $humidite = $prevision['main']['humidity'] ?? null;
+        $horodatage = $prevision['dt'] ?? null;
 
-    foreach ($dates as $index => $date) {
-        $temperature = $temperatures[$index] ?? null;
-        $humidite = $humidites[$index] ?? null;
-
-        if ($temperature === null || $humidite === null) {
+        if (!is_numeric($temperature) || !is_numeric($humidite) || !is_numeric($horodatage)) {
             continue;
         }
 
         $resultat[] = [
-            'date' => $date,
+            'date' => gmdate(DATE_ATOM, (int) $horodatage),
             'temperature' => (float) $temperature,
-            'humidite' => (float) $humidite,
+            'humidite' => (int) $humidite,
+            'precipitations' => (float) ($prevision['rain']['3h'] ?? 0)
+                + (float) ($prevision['snow']['3h'] ?? 0),
+            'vent' => isset($prevision['wind']['speed'])
+                ? (float) $prevision['wind']['speed'] * 3.6
+                : null,
+            'description' => $prevision['weather'][0]['description'] ?? null,
         ];
     }
 
     return [
         'ville' => $ville,
-        'source' => 'api-meteo',
+        'source' => 'openweathermap',
         'donnees' => $resultat,
     ];
 }
@@ -225,19 +273,23 @@ function recupererDonneesMeteo(string $ville): array
 // ---------------------------------------------------------
 
 try {
-    // Si api.php est à la racine du dossier BackEnd,
-    // le .env doit être au dossier parent.
     chargerVariablesEnvironnement(dirname(__DIR__) . '/.env');
 
-    $ville = $_GET['ville'] ?? 'Cherbourg';
+    $ville = $_GET['ville'] ?? 'La Glacerie';
 
-    echo json_encode(recupererDonneesMeteo($ville));
+    if (!is_string($ville) || trim($ville) === '' || strlen($ville) > 100) {
+        http_response_code(400);
+        echo json_encode(['erreur' => 'Le nom de la ville est invalide.']);
+        exit;
+    }
+
+    echo json_encode(recupererDonneesMeteo(trim($ville)), JSON_THROW_ON_ERROR);
 } catch (Throwable $e) {
-    error_log('Erreur API : ' . $e->getMessage());
+    error_log('Erreur interne de l’API météo : ' . $e->getMessage());
 
     http_response_code(500);
 
     echo json_encode([
         'erreur' => 'Erreur interne du serveur.',
-    ]);
+    ], JSON_INVALID_UTF8_SUBSTITUTE);
 }
