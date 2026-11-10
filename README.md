@@ -51,3 +51,13 @@ Latitude=(Mettre votre Latitude)
 Longitude=(Mettre votre Longitude)
 METEO_API_KEY=(Mettre votre Clé API)
 ```
+
+
+## Licence
+
+Ce projet est distribué sous licence **Creative Commons Attribution - Pas d’Utilisation Commerciale 4.0 International (CC BY-NC 4.0)**.
+
+Copyright (c) 2026 **Quentin Boisset**  
+Dépôt GitHub : [LaMeteoGlacerienne](https://github.com/HutchAlpha/LaMeteoGlacerienne)
+
+Vous pouvez utiliser, modifier et partager ce projet uniquement à des fins non commerciales, en créditant l’auteur original.
