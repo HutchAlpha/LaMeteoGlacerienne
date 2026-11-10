@@ -1,7 +1,9 @@
-import { useEffect } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import { Link } from 'react-router-dom'
-import { chargerDonneesMeteo } from '../store/slices/meteoSlice.js'
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { Link } from "react-router-dom";
+import { chargerDonneesMeteo } from "../store/slices/meteoSlice.js";
+
+import "../styles/_index.scss";
 
 export default function IndexPage() {
   const dispatch = useDispatch()
@@ -13,8 +15,8 @@ export default function IndexPage() {
 
   return (
     <section className="index">
-      <h1>L’horizon Glacérienne</h1>
-      <p>(La Glacerie 50470)</p>
+      <h1 className="index__h1">L’horizon Glacérienne</h1>
+      <p className="index__p">(La Glacerie 50470)</p>
       <h2>Prévisions météo</h2>
       {status === 'loading' && <p role="status">Chargement des prévisions…</p>}
       {status === 'failed' && <p role="alert">{erreur}</p>}
@@ -24,8 +26,8 @@ export default function IndexPage() {
       {status === 'succeeded' && donnees.length > 0 && (
         <>
           <p>Prévisions des prochains jours pour {ville} :</p>
-          <div className="history-table-wrapper">
-            <table className="history-table">
+          <div className="index__div">
+            <table className="index__table">
               <thead>
                 <tr>
                   <th scope="col">Date et heure</th>

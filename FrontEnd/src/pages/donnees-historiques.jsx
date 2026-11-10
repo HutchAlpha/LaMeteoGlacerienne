@@ -30,8 +30,8 @@ function DonneesHistoriquesPage() {
       {historiqueStatus === 'succeeded' && historique.length > 0 && (
         <>
           <p>{historiqueTotal} relevé(s) au total :</p>
-          <div className="history-table-wrapper">
-            <table className="history-table">
+          <div className="donnees-historiques__div">
+            <table className="donnees-historiques__table">
               <thead>
                 <tr>
                   <th scope="col">Date</th>

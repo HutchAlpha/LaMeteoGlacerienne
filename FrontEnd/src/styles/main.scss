@@ -1,5 +1,7 @@
 @use 'variables' as *;
 
+@use "./_index.scss";
+
 :root {
   font-family: $font-family;
   color: var(--color-text);
@@ -16,27 +18,4 @@
 
 body {
   margin: 0;
-}
-
-.history-table-wrapper {
-  max-width: 100%;
-  margin: 1rem 0 2rem;
-  overflow-x: auto;
-}
-
-.history-table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: left;
-
-  th,
-  td {
-    padding: 0.75rem;
-    border-bottom: 1px solid var(--color-border, #d1d5db);
-    white-space: nowrap;
-  }
-
-  th {
-    color: var(--color-text, #1f2937);
-  }
 }

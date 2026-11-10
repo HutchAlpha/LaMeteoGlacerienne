@@ -8,11 +8,11 @@ export const chargerDonneesMeteo = createAsyncThunk(
     const payload = await response.json()
 
     if (!response.ok || payload.erreur) {
-      return rejectWithValue(payload.erreur || 'Impossible de charger les données météo.')
+      return rejectWithValue(payload.erreur || 'Impossible de charger les données météo')
     }
 
     if (!Array.isArray(payload.donnees)) {
-      return rejectWithValue('La réponse de l’API météo est invalide.')
+      return rejectWithValue('La réponse de l’API météo est invalide')
     }
 
     return payload
