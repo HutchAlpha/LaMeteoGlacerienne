@@ -46,6 +46,7 @@ const meteoSlice = createSlice({
     donnees: [],
     status: 'idle',
     erreur: null,
+    prochaineActualisation: null,
     historique: [],
     historiqueTotal: 0,
     historiqueStatus: 'idle',
@@ -62,6 +63,8 @@ const meteoSlice = createSlice({
         state.status = 'succeeded'
         state.ville = action.payload.ville
         state.donnees = action.payload.donnees
+        state.prochaineActualisation =
+        action.payload.prochaineActualisation ?? null;
       })
       .addCase(chargerDonneesMeteo.rejected, (state, action) => {
         state.status = 'failed'

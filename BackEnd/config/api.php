@@ -148,7 +148,38 @@ function obtenirConfigurationApiMeteo(): array
         'cle' => $cle,
     ];
 }
+// --------------------------------------------------------
+//! Actualisation des données météo toutes les 3 heures
+// ---------------------------------------------------------
 
+function calculerProchaineActualisation(): string
+{
+    $heuresRafraichissement = [1, 4, 7, 10, 13, 16, 19, 22];
+
+    $heureActuelle = (int) date('G');
+    $prochaineHeure = null;
+
+    foreach ($heuresRafraichissement as $heure) {
+        if ($heure > $heureActuelle) {
+            $prochaineHeure = $heure;
+            break;
+        }
+    }
+
+    if ($prochaineHeure === null) {
+        $prochaineHeure = $heuresRafraichissement[0];
+
+        return date(
+            'Y-m-d\TH:i:s',
+            strtotime('tomorrow ' . $prochaineHeure . ':00')
+        );
+    }
+
+    return date(
+        'Y-m-d\TH:i:s',
+        strtotime('today ' . $prochaineHeure . ':00')
+    );
+}
 // ---------------------------------------------------------
 //! Récupération et filtrage des données météo
 // ---------------------------------------------------------
@@ -265,6 +296,7 @@ function recupererDonneesMeteo(string $ville): array
         'ville' => $ville,
         'source' => 'openweathermap',
         'donnees' => $resultat,
+        'prochaineActualisation' => calculerProchaineActualisation(),
     ];
 }
 

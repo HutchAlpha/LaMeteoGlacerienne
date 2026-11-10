@@ -3,11 +3,13 @@ import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { chargerDonneesMeteo } from "../store/slices/meteoSlice.js";
 
+import ActualisationAPI from "./Modules/ActualisationAPI.jsx";
+
 import "../styles/_index.scss";
 
 export default function IndexPage() {
   const dispatch = useDispatch()
-  const { ville, donnees, status, erreur } = useSelector((state) => state.meteo)
+  const { ville, donnees, status, erreur, prochaineActualisation } = useSelector((state) => state.meteo)
 
   useEffect(() => {
     dispatch(chargerDonneesMeteo('La Glacerie'))
@@ -26,7 +28,13 @@ export default function IndexPage() {
       {status === 'succeeded' && donnees.length > 0 && (
         <>
           <p>Prévisions des prochains jours pour {ville} :</p>
-          <div className="index__div">
+
+        <ActualisationAPI
+            derniereActualisation={donnees[0]?.date}
+            prochaineActualisation={prochaineActualisation}
+        />
+
+          <div className="index__divPrevisions">
             <table className="index__table">
               <thead>
                 <tr className="index__tr">
