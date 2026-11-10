@@ -11,7 +11,27 @@
 
     &__p {
         color: var(--color-rouge);
-        font-size: 1rem;
+        font-size: 1.4rem;
+        text-align: center;
+    }
+
+    &__div{
+        background-color: var(--color-card);
+        margin-bottom: 0.5rem;
+        border: 1px solid var(--color-text);
+        width: 80%;
+        display: flex;
+        justify-content: space-around;
+        margin: 0 auto;
+    }
+
+    &__table{
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    &__tr{
+        border-bottom: 1px solid var(--color-text);
         text-align: center;
     }
 }

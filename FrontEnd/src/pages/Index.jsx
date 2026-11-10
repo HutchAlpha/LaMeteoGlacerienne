@@ -29,7 +29,7 @@ export default function IndexPage() {
           <div className="index__div">
             <table className="index__table">
               <thead>
-                <tr>
+                <tr className="index__tr">
                   <th scope="col">Date et heure</th>
                   <th scope="col">Température</th>
                   <th scope="col">Humidité</th>
@@ -40,7 +40,7 @@ export default function IndexPage() {
               </thead>
               <tbody>
                 {donnees.map((prevision) => (
-                  <tr key={prevision.date}>
+                  <tr className="index__tr" key={prevision.date}>
                     <td>{new Date(prevision.date).toLocaleString('fr-FR')}</td>
                     <td>{prevision.temperature} °C</td>
                     <td>{prevision.humidite} %</td>
