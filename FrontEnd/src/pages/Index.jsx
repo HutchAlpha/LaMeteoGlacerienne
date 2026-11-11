@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { chargerDonneesMeteo } from "../store/slices/meteoSlice.js";
 
-import ActualisationAPI from "./Modules/ActualisationAPI.jsx";
+import ChronoActualisationAPI from "./Modules/ChronoActualisationAPI.jsx";
 
 import "../styles/_index.scss";
 
@@ -29,9 +29,9 @@ export default function IndexPage() {
         <>
           <p>Prévisions des prochains jours pour {ville} :</p>
 
-        <ActualisationAPI
-            derniereActualisation={donnees[0]?.date}
-            prochaineActualisation={prochaineActualisation}
+        <ChronoActualisationAPI
+          derniereActualisation={donnees[0]?.date}
+          prochaineActualisation={prochaineActualisation}
         />
 
           <div className="index__divPrevisions">

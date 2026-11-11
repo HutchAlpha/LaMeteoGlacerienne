@@ -1,0 +1,13 @@
+.Actualisation {
+    text-align: center;
+    font-size: 0.875rem;
+    color: var(--color-gris);
+    margin-bottom: 1rem;
+    padding: 0.5rem 1rem;
+    background-color: var(--color-card-gris);
+    
+    &__strong {
+        font-weight: bold;
+        color: var(--color-rouge);
+    }
+}

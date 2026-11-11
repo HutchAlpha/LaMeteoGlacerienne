@@ -2,6 +2,9 @@
 
 @use "./_index.scss";
 
+//! Modules
+@use "./Modules/chronoActualisationAPI.scss";
+
 :root {
   font-family: $font-family;
   color: var(--color-text);

@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 
-function Actualisation({ derniereActualisation, prochaineActualisation }) {
+import "../../styles/Modules/_chronoActualisationAPI.scss";
+
+function ChronoActualisationAPI({ derniereActualisation, prochaineActualisation }) {
     const isValidDate = (value) => {
         return value && !Number.isNaN(new Date(value).getTime());
     };
@@ -71,16 +73,16 @@ function Actualisation({ derniereActualisation, prochaineActualisation }) {
         <div className="Actualisation">
             <p>
                 La page s’actualisera à :{" "}
-                <strong>
+                <strong className="Actualisation__strong">
                     {new Date(prochaineActualisation).toLocaleTimeString("fr-FR", {
                         hour: "2-digit",
                         minute: "2-digit"
                     }).replace(":", " h ")}
                 </strong>{" "}
-                (dans <strong>{formatCountdown(secondsLeft)}</strong>)
+                (dans <strong className="Actualisation__strong">{formatCountdown(secondsLeft)}</strong>)
             </p>
         </div>
     );
 }
 
-export default Actualisation;
+export default ChronoActualisationAPI;
