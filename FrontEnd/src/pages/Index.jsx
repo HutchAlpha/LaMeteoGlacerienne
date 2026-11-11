@@ -29,12 +29,14 @@ export default function IndexPage() {
         <>
           <p>Prévisions des prochains jours pour {ville} :</p>
 
-        <ChronoActualisationAPI
-          derniereActualisation={donnees[0]?.date}
-          prochaineActualisation={prochaineActualisation}
-        />
 
           <div className="index__divPrevisions">
+
+          <ChronoActualisationAPI
+            derniereActualisation={donnees[0]?.date}
+            prochaineActualisation={prochaineActualisation}
+          />
+          
             <table className="index__table">
               <thead>
                 <tr className="index__tr">

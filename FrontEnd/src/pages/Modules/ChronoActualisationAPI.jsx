@@ -1,88 +1,85 @@
-import { useEffect, useState } from "react";
-
+import { useEffect, useRef, useState } from "react";
 import "../../styles/Modules/_chronoActualisationAPI.scss";
 
-function ChronoActualisationAPI({ derniereActualisation, prochaineActualisation }) {
-    const isValidDate = (value) => {
-        return value && !Number.isNaN(new Date(value).getTime());
-    };
+export default function ChronoActualisationAPI({
+    prochaineActualisation,
+    onActualiser
+}) {
+    const [maintenant, setMaintenant] = useState(Date.now);
+    const echeanceTraitee = useRef(null);
 
-    const calculateSecondsLeft = () => {
-        if (!isValidDate(prochaineActualisation)) {
-            return null;
-        }
+    const horodatage =
+        prochaineActualisation == null
+            ? NaN
+            : new Date(prochaineActualisation).getTime();
 
-        const difference =
-            new Date(prochaineActualisation).getTime() - Date.now();
-
-        return Math.max(0, Math.floor(difference / 1000));
-    };
-
-    const [secondsLeft, setSecondsLeft] = useState(calculateSecondsLeft);
+    const dateValide = Number.isFinite(horodatage);
 
     useEffect(() => {
-        setSecondsLeft(calculateSecondsLeft());
-
-        if (!isValidDate(prochaineActualisation)) {
-            return;
-        }
-
         const interval = setInterval(() => {
-            setSecondsLeft((previousSeconds) => {
-                if (previousSeconds === null) {
-                    return null;
-                }
-
-                if (previousSeconds <= 1) {
-                    window.location.reload();
-                    return 0;
-                }
-
-                return previousSeconds - 1;
-            });
+            setMaintenant(Date.now());
         }, 1000);
 
         return () => clearInterval(interval);
-    }, [prochaineActualisation]);
+    }, []);
 
-    const formatDate = (value) => {
-        return isValidDate(value)
-            ? new Date(value).toLocaleString("fr-FR")
-            : "—";
-    };
+    useEffect(() => {
+        if (!dateValide || maintenant < horodatage) {
+            return;
+        }
 
-    const formatCountdown = (totalSeconds) => {
-        if (totalSeconds === null) {
+        // Une seule demande d'actualisation par échéance.
+        if (echeanceTraitee.current === horodatage) {
+            return;
+        }
+
+        echeanceTraitee.current = horodatage;
+        onActualiser?.();
+    }, [dateValide, horodatage, maintenant, onActualiser]);
+
+    const secondesRestantes = dateValide
+        ? Math.max(0, Math.ceil((horodatage - maintenant) / 1000))
+        : null;
+
+    const formatCountdown = (totalSecondes) => {
+        if (totalSecondes === null) {
             return "—";
         }
 
-        const hours = Math.floor(totalSeconds / 3600);
-        const minutes = Math.floor((totalSeconds % 3600) / 60);
-        const seconds = totalSeconds % 60;
+        const heures = Math.floor(totalSecondes / 3600);
+        const minutes = Math.floor((totalSecondes % 3600) / 60);
+        const secondes = totalSecondes % 60;
 
-        const pad = (value) => String(value).padStart(2, "0");
+        const pad = (valeur) => String(valeur).padStart(2, "0");
 
-        if (hours === 0) {
-            return `${minutes} min ${pad(seconds)} s`;
-        }
-
-        return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+        return `${pad(heures)}:${pad(minutes)}:${pad(secondes)}`;
     };
 
+    const heureActualisation = dateValide
+        ? new Date(horodatage)
+              .toLocaleTimeString("fr-FR", {
+                  timeZone: "Europe/Paris",
+                  hour: "2-digit",
+                  minute: "2-digit"
+              })
+              .replace(":", " h ")
+        : "—";
+
     return (
+        <>
+        <h2>Prévisions par tranches de 3 heures</h2>
         <div className="Actualisation">
-            <p>
+            <p className="Actualisation__p">
                 La page s’actualisera à :{" "}
-                <strong className="Actualisation__strong">
-                    {new Date(prochaineActualisation).toLocaleTimeString("fr-FR", {
-                        hour: "2-digit",
-                        minute: "2-digit"
-                    }).replace(":", " h ")}
-                </strong>{" "}
-                (dans <strong className="Actualisation__strong">{formatCountdown(secondsLeft)}</strong>)
+                <strong className="Actualisation__strong">{heureActualisation}</strong>{" "}
+                (dans{" "}
+                <strong className="Actualisation__strong">{formatCountdown(secondesRestantes)}</strong>)
             </p>
+
+            {dateValide && secondesRestantes === 0 && (
+                <p>Actualisation demandée. En attente de la prochaine échéance !</p>
+            )}
         </div>
+        </>
     );
 }
-
-export default ChronoActualisationAPI;

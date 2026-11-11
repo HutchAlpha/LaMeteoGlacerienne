@@ -154,31 +154,22 @@ function obtenirConfigurationApiMeteo(): array
 
 function calculerProchaineActualisation(): string
 {
-    $heuresRafraichissement = [1, 4, 7, 10, 13, 16, 19, 22];
+    $fuseau = new DateTimeZone('Europe/Paris');
+    $maintenant = new DateTimeImmutable('now', $fuseau);
+    $heures = [1, 4, 7, 10, 13, 16, 19, 22];
 
-    $heureActuelle = (int) date('G');
-    $prochaineHeure = null;
+    foreach ($heures as $heure) {
+        $candidate = $maintenant->setTime($heure, 0, 0);
 
-    foreach ($heuresRafraichissement as $heure) {
-        if ($heure > $heureActuelle) {
-            $prochaineHeure = $heure;
-            break;
+        if ($candidate > $maintenant) {
+            return $candidate->format(DATE_ATOM);
         }
     }
 
-    if ($prochaineHeure === null) {
-        $prochaineHeure = $heuresRafraichissement[0];
-
-        return date(
-            'Y-m-d\TH:i:s',
-            strtotime('tomorrow ' . $prochaineHeure . ':00')
-        );
-    }
-
-    return date(
-        'Y-m-d\TH:i:s',
-        strtotime('today ' . $prochaineHeure . ':00')
-    );
+    return $maintenant
+        ->modify('+1 day')
+        ->setTime($heures[0], 0, 0)
+        ->format(DATE_ATOM);
 }
 // ---------------------------------------------------------
 //! Récupération et filtrage des données météo
