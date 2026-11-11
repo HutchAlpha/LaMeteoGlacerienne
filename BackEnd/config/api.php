@@ -9,122 +9,6 @@ header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 
 // ---------------------------------------------------------
-//! Chargement du fichier .env
-// ---------------------------------------------------------
-
-function chargerVariablesEnvironnement(string $chemin): void
-{
-    if (!is_file($chemin)) {
-        throw new RuntimeException(
-            'Fichier .env introuvable. Copie .env.example vers .env puis renseigne les variables.'
-        );
-    }
-
-    $variables = parse_ini_file($chemin, false, INI_SCANNER_RAW);
-
-    if ($variables === false) {
-        throw new RuntimeException('Impossible de lire le fichier .env.');
-    }
-
-    foreach ($variables as $cle => $valeur) {
-        if ($valeur === null || $valeur === '') {
-            continue;
-        }
-
-        if (getenv($cle) === false) {
-            putenv("{$cle}={$valeur}");
-            $_ENV[$cle] = $valeur;
-            $_SERVER[$cle] = $valeur;
-        }
-    }
-}
-
-function valeurEnvironnement(string $cle, string $defaut = ''): string
-{
-    $valeur = getenv($cle);
-
-    return ($valeur === false || $valeur === '') ? $defaut : (string) $valeur;
-}
-
-// ---------------------------------------------------------
-//! Configuration base de données
-// ---------------------------------------------------------
-
-function configurationDepuisEnvironnement(string $prefixe, string $env): array
-{
-    $host = valeurEnvironnement($prefixe . 'HOST');
-    $dbname = valeurEnvironnement($prefixe . 'NAME');
-    $user = valeurEnvironnement($prefixe . 'USER');
-
-    if ($host === '' || $dbname === '' || $user === '') {
-        throw new RuntimeException(
-            "Configuration BDD incomplète pour {$env} : vérifie {$prefixe}HOST, {$prefixe}NAME et {$prefixe}USER."
-        );
-    }
-
-    return [
-        'host' => $host,
-        'port' => valeurEnvironnement($prefixe . 'PORT', '3306'),
-        'dbname' => $dbname,
-        'user' => $user,
-        'pass' => valeurEnvironnement($prefixe . 'PASS'),
-        'env' => $env,
-    ];
-}
-
-function connexionBdd(array $config): PDO
-{
-    $port = $config['port'] !== '' ? ';port=' . $config['port'] : '';
-
-    return new PDO(
-        "mysql:host={$config['host']}{$port};dbname={$config['dbname']};charset=utf8mb4",
-        $config['user'],
-        $config['pass'],
-        [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_EMULATE_PREPARES => false,
-        ]
-    );
-}
-
-function obtenirConnexionBdd(): PDO
-{
-    static $pdo = null;
-
-    if ($pdo instanceof PDO) {
-        return $pdo;
-    }
-
-    $configProduction = configurationDepuisEnvironnement('DB_', 'PRODUCTION');
-    $configLocale = configurationDepuisEnvironnement('DB_LOCAL_', 'LOCAL-FALLBACK');
-
-    try {
-        $pdo = connexionBdd($configProduction);
-
-        error_log('Connexion BDD réussie : PRODUCTION');
-
-        return $pdo;
-    } catch (PDOException $e) {
-        error_log('Connexion BDD PRODUCTION impossible : ' . $e->getMessage());
-    }
-
-    try {
-        $pdo = connexionBdd($configLocale);
-
-        error_log('Connexion BDD réussie : LOCAL-FALLBACK');
-
-        return $pdo;
-    } catch (PDOException $e) {
-        error_log('Connexion BDD LOCAL impossible : ' . $e->getMessage());
-
-        throw new RuntimeException(
-            'Impossible de se connecter à la base de données, en ligne comme en local.'
-        );
-    }
-}
-
-// ---------------------------------------------------------
 //! Configuration API météo
 // ---------------------------------------------------------
 
@@ -135,9 +19,9 @@ function obtenirConfigurationApiMeteo(): array
     $longitude = valeurEnvironnement('LONGITUDE', valeurEnvironnement('Longitude'));
     $cle = valeurEnvironnement('METEO_API_KEY');
 
-    if ($url === '' || $latitude === '' || $longitude === '') {
+    if ($url === '' || $latitude === '' || $longitude === '' || $cle === '') {
         throw new RuntimeException(
-            'Configuration API météo incomplète : vérifie METEO_API_URL, LATITUDE et LONGITUDE dans .env.'
+            'Configuration API météo incomplète : vérifie METEO_API_URL, LATITUDE, LONGITUDE et METEO_API_KEY dans .env.'
         );
     }
 
@@ -187,13 +71,10 @@ function recupererDonneesMeteo(string $ville): array
     $parametres = [
         'lat' => $config['latitude'],
         'lon' => $config['longitude'],
+        'appid' => $config['cle'],
         'units' => 'metric',
         'lang' => 'fr',
     ];
-
-    if ($config['cle'] !== '') {
-        $parametres['appid'] = $config['cle'];
-    }
 
     $options = stream_context_create([
         'http' => [
@@ -262,26 +143,73 @@ function recupererDonneesMeteo(string $ville): array
     $resultat = [];
 
     foreach ($donnees['list'] as $prevision) {
-        $temperature = $prevision['main']['temp'] ?? null;
-        $humidite = $prevision['main']['humidity'] ?? null;
-        $horodatage = $prevision['dt'] ?? null;
-
-        if (!is_numeric($temperature) || !is_numeric($humidite) || !is_numeric($horodatage)) {
+        if (!is_array($prevision)) {
             continue;
         }
 
+        $main = $prevision['main'] ?? [];
+        if (!is_array($main)) {
+            continue;
+        }
+
+        $temperature = $main['temp'] ?? null;
+        $humidite = $main['humidity'] ?? null;
+        $horodatage = $prevision['dt'] ?? null;
+
+        if (
+            !is_numeric($temperature)
+            || !is_numeric($humidite)
+            || !is_numeric($horodatage)
+        ) {
+            continue;
+        }
+
+        $meteo = $prevision['weather'][0] ?? [];
+        $pluieApi = $prevision['rain'] ?? [];
+        $neigeApi = $prevision['snow'] ?? [];
+        $ventApi = $prevision['wind'] ?? [];
+
+        $meteo = is_array($meteo) ? $meteo : [];
+        $pluieApi = is_array($pluieApi) ? $pluieApi : [];
+        $neigeApi = is_array($neigeApi) ? $neigeApi : [];
+        $ventApi = is_array($ventApi) ? $ventApi : [];
+
+        $pluie = is_numeric($pluieApi['3h'] ?? null)
+            ? (float) $pluieApi['3h']
+            : 0.0;
+        $neigeEnMm = is_numeric($neigeApi['3h'] ?? null)
+            ? (float) $neigeApi['3h']
+            : 0.0;
+        $vent = is_numeric($ventApi['speed'] ?? null)
+            ? (float) $ventApi['speed'] * 3.6
+            : null;
+        $rafales = is_numeric($ventApi['gust'] ?? null)
+            ? (float) $ventApi['gust'] * 3.6
+            : null;
+        $dateTime = gmdate('Y-m-d H:i:s', (int) $horodatage);
+
         $resultat[] = [
             'date' => gmdate(DATE_ATOM, (int) $horodatage),
+            'date_time' => $dateTime,
             'temperature' => (float) $temperature,
+            'temp_min' => is_numeric($main['temp_min'] ?? null) ? (float) $main['temp_min'] : null,
+            'temp_max' => is_numeric($main['temp_max'] ?? null) ? (float) $main['temp_max'] : null,
+            'feels_like' => is_numeric($main['feels_like'] ?? null) ? (float) $main['feels_like'] : null,
             'humidite' => (int) $humidite,
-            'precipitations' => (float) ($prevision['rain']['3h'] ?? 0)
-                + (float) ($prevision['snow']['3h'] ?? 0),
-            'vent' => isset($prevision['wind']['speed'])
-                ? (float) $prevision['wind']['speed'] * 3.6
-                : null,
-            'description' => $prevision['weather'][0]['description'] ?? null,
+            'pressure' => is_numeric($main['pressure'] ?? null) ? (int) $main['pressure'] : null,
+            'precipitation' => $pluie,
+            'precipitations' => $pluie + $neigeEnMm,
+            'snow' => $neigeEnMm * 0.7,
+            'wind_speed' => $vent,
+            'vent' => $vent,
+            'wind_gust' => $rafales,
+            'weather_icon' => is_string($meteo['icon'] ?? null) ? $meteo['icon'] : null,
+            'description' => is_string($meteo['description'] ?? null) ? $meteo['description'] : null,
+            'weather_description' => is_string($meteo['description'] ?? null) ? $meteo['description'] : null,
         ];
     }
+
+    enregistrerPrevisionsMeteo($resultat);
 
     return [
         'ville' => $ville,
@@ -291,12 +219,73 @@ function recupererDonneesMeteo(string $ville): array
     ];
 }
 
+function enregistrerPrevisionsMeteo(array $previsions): void
+{
+    global $pdo;
+
+    if (!$pdo instanceof PDO) {
+        throw new RuntimeException('Connexion à la base de données indisponible.');
+    }
+
+    $requete = $pdo->prepare('
+        INSERT INTO weather_data (
+            date_time, temperature, humidity, wind_speed, wind_gust,
+            pressure, feels_like, precipitation, snow, temp_min, temp_max,
+            weather_icon, weather_description
+        )
+        VALUES (
+            :date_time, :temperature, :humidity, :wind_speed, :wind_gust,
+            :pressure, :feels_like, :precipitation, :snow, :temp_min, :temp_max,
+            :weather_icon, :weather_description
+        )
+        ON DUPLICATE KEY UPDATE
+            temperature = VALUES(temperature),
+            humidity = VALUES(humidity),
+            wind_speed = VALUES(wind_speed),
+            wind_gust = VALUES(wind_gust),
+            pressure = VALUES(pressure),
+            feels_like = VALUES(feels_like),
+            precipitation = VALUES(precipitation),
+            snow = VALUES(snow),
+            temp_min = VALUES(temp_min),
+            temp_max = VALUES(temp_max),
+            weather_icon = VALUES(weather_icon),
+            weather_description = VALUES(weather_description)
+    ');
+
+    $pdo->beginTransaction();
+    try {
+        foreach ($previsions as $prevision) {
+            $requete->execute([
+                ':date_time' => $prevision['date_time'],
+                ':temperature' => $prevision['temperature'],
+                ':humidity' => $prevision['humidite'],
+                ':wind_speed' => $prevision['wind_speed'],
+                ':wind_gust' => $prevision['wind_gust'],
+                ':pressure' => $prevision['pressure'],
+                ':feels_like' => $prevision['feels_like'],
+                ':precipitation' => $prevision['precipitation'],
+                ':snow' => $prevision['snow'],
+                ':temp_min' => $prevision['temp_min'],
+                ':temp_max' => $prevision['temp_max'],
+                ':weather_icon' => $prevision['weather_icon'],
+                ':weather_description' => $prevision['weather_description'],
+            ]);
+        }
+
+        $pdo->commit();
+    } catch (Throwable $e) {
+        $pdo->rollBack();
+        throw $e;
+    }
+}
+
 // ---------------------------------------------------------
 //! Point d’entrée de l’API
 // ---------------------------------------------------------
 
 try {
-    chargerVariablesEnvironnement(dirname(__DIR__) . '/.env');
+    require_once __DIR__ . '/database.php';
 
     $ville = $_GET['ville'] ?? 'La Glacerie';
 

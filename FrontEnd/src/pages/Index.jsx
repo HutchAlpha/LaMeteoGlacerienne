@@ -37,30 +37,53 @@ export default function IndexPage() {
             prochaineActualisation={prochaineActualisation}
           />
           
-            <table className="index__table">
-              <thead>
-                <tr className="index__tr">
-                  <th scope="col">Date et heure</th>
-                  <th scope="col">Température</th>
-                  <th scope="col">Humidité</th>
-                  <th scope="col">Précipitations (3 h)</th>
-                  <th scope="col">Vent</th>
-                  <th scope="col">Conditions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {donnees.map((prevision) => (
-                  <tr className="index__tr" key={prevision.date}>
-                    <td>{new Date(prevision.date).toLocaleString('fr-FR')}</td>
-                    <td>{prevision.temperature} °C</td>
-                    <td>{prevision.humidite} %</td>
-                    <td>{prevision.precipitations} mm</td>
-                    <td>{prevision.vent == null ? '—' : `${prevision.vent.toFixed(1)} km/h`}</td>
-                    <td>{prevision.description ?? '—'}</td>
+            <div className="index__tableWrapper">
+              <table className="index__table">
+                <thead>
+                  <tr className="index__tr">
+                    <th scope="col">Date et heure</th>
+                    <th scope="col">Conditions</th>
+                    <th scope="col">Température</th>
+                    <th scope="col">Min.</th>
+                    <th scope="col">Max.</th>
+                    <th scope="col">Ressenti</th>
+                    <th scope="col">Humidité</th>
+                    <th scope="col">Pluie (3 h)</th>
+                    <th scope="col">Neige (3 h)</th>
+                    <th scope="col">Vent</th>
+                    <th scope="col">Rafales</th>
+                    <th scope="col">Pression</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {donnees.map((prevision) => (
+                    <tr className="index__tr" key={prevision.date}>
+                      <td>{new Date(prevision.date).toLocaleString('fr-FR')}</td>
+                      <td>
+                        {prevision.weather_icon && (
+                          <img
+                            className="index__weatherIcon"
+                            src={`https://openweathermap.org/img/wn/${prevision.weather_icon}.png`}
+                            alt=""
+                          />
+                        )}
+                        {prevision.description ?? '—'}
+                      </td>
+                      <td>{prevision.temperature} °C</td>
+                      <td>{prevision.temp_min == null ? '—' : `${prevision.temp_min} °C`}</td>
+                      <td>{prevision.temp_max == null ? '—' : `${prevision.temp_max} °C`}</td>
+                      <td>{prevision.feels_like == null ? '—' : `${prevision.feels_like} °C`}</td>
+                      <td>{prevision.humidite} %</td>
+                      <td>{prevision.precipitation} mm</td>
+                      <td>{prevision.snow} cm</td>
+                      <td>{prevision.vent == null ? '—' : `${prevision.vent.toFixed(1)} km/h`}</td>
+                      <td>{prevision.wind_gust == null ? '—' : `${prevision.wind_gust.toFixed(1)} km/h`}</td>
+                      <td>{prevision.pressure == null ? '—' : `${prevision.pressure} hPa`}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </>
       )}

@@ -36,9 +36,14 @@ function DonneesHistoriquesPage() {
                 <tr>
                   <th scope="col">Date</th>
                   <th scope="col">Température</th>
+                  <th scope="col">Min.</th>
+                  <th scope="col">Max.</th>
+                  <th scope="col">Ressenti</th>
                   <th scope="col">Humidité</th>
-                  <th scope="col">Précipitations</th>
+                  <th scope="col">Pluie</th>
+                  <th scope="col">Neige</th>
                   <th scope="col">Vent</th>
+                  <th scope="col">Rafales</th>
                   <th scope="col">Pression</th>
                   <th scope="col">Conditions</th>
                 </tr>
@@ -48,11 +53,25 @@ function DonneesHistoriquesPage() {
                   <tr key={releve.id}>
                     <td>{releve.date ?? '—'}</td>
                     <td>{releve.temperature == null ? '—' : `${releve.temperature} °C`}</td>
+                    <td>{releve.temp_min == null ? '—' : `${releve.temp_min} °C`}</td>
+                    <td>{releve.temp_max == null ? '—' : `${releve.temp_max} °C`}</td>
+                    <td>{releve.ressenti == null ? '—' : `${releve.ressenti} °C`}</td>
                     <td>{releve.humidite == null ? '—' : `${releve.humidite} %`}</td>
                     <td>{releve.precipitation == null ? '—' : `${releve.precipitation} mm`}</td>
+                    <td>{releve.neige == null ? '—' : `${releve.neige} cm`}</td>
                     <td>{releve.vitesse_vent == null ? '—' : `${releve.vitesse_vent} km/h`}</td>
+                    <td>{releve.rafales == null ? '—' : `${releve.rafales} km/h`}</td>
                     <td>{releve.pression == null ? '—' : `${releve.pression} hPa`}</td>
-                    <td>{releve.description ?? '—'}</td>
+                    <td>
+                      {releve.icone && (
+                        <img
+                          className="donnees-historiques__weatherIcon"
+                          src={`https://openweathermap.org/img/wn/${releve.icone}.png`}
+                          alt=""
+                        />
+                      )}
+                      {releve.description ?? '—'}
+                    </td>
                   </tr>
                 ))}
               </tbody>

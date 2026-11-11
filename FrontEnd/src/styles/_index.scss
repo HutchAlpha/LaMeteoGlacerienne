@@ -17,23 +17,34 @@
 
     &__divPrevisions{
         display: flex;
-        justify-content: space-around;
-        flex-wrap: wrap;
+        flex-direction: column;
         background-color: var(--color-card);
         margin-bottom: 0.5rem;
         border: 1px solid var(--color-text);
         width: 80%;
         margin: 0 auto;
         border-radius: 5px;
+        overflow: hidden;
+    }
+
+    &__tableWrapper {
+        overflow-x: auto;
     }
 
     &__table{
         width: 100%;
+        min-width: 1050px;
         border-collapse: collapse;
     }
 
     &__tr{
         border-bottom: 1px solid var(--color-text);
         text-align: center;
+    }
+
+    &__weatherIcon {
+        width: 40px;
+        height: 40px;
+        vertical-align: middle;
     }
 }
