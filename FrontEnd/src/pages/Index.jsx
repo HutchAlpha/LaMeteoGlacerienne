@@ -32,6 +32,25 @@ export default function IndexPage() {
     };
 }, [previsionOuverte]);
 
+//! Gestion de la séparation des jours
+const previsionsDuJour = [...donnees].sort((a, b) => {
+    return new Date(a.date).getTime() - new Date(b.date).getTime();
+});
+
+const previsionsParJour = previsionsDuJour.reduce((groupes, prevision) => {
+    const jour = new Date(prevision.date).toLocaleDateString('fr-FR', {
+        timeZone: 'Europe/Paris'
+    });
+
+    if (!groupes[jour]) {
+        groupes[jour] = [];
+    }
+
+    groupes[jour].push(prevision);
+
+    return groupes;
+}, {});
+
   return (
     <section className="index">
       <h1 className="index__h1">L’horizon Glacérienne</h1>
@@ -53,12 +72,17 @@ export default function IndexPage() {
             derniereActualisation={donnees[0]?.date}
             prochaineActualisation={prochaineActualisation}
           />
-          
-            <div className="index__tableWrapper">
-              <table className="index__table">
-                <thead>
-                  <tr className="index__tr">
-                    <th scope="col">Date et heure</th>
+
+
+          {Object.entries(previsionsParJour).map(([jour, previsionsDuJour]) => (
+            <div className="index__jour" key={jour}>
+            <h3>Prévisions du {jour}</h3>
+
+          <div className="index__tableWrapper">
+            <table className="index__table">
+              <thead>
+                <tr className="index__tr">
+                  <th scope="col">Date et heure</th>
                     <th scope="col">Conditions</th>
                     <th scope="col">Température</th>
                     <th scope="col">Ressenti</th>
@@ -71,7 +95,7 @@ export default function IndexPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {donnees.map((prevision) => (
+                  {previsionsDuJour.map((prevision) => (
                     <tr className="index__tr" key={prevision.date}>
                       <td>{new Date(prevision.date).toLocaleString('fr-FR')}</td>
                       <td>
@@ -115,6 +139,8 @@ export default function IndexPage() {
                 </tbody>
               </table>
             </div>
+            </div>
+            ))}
           </div>
         </>
       )}
