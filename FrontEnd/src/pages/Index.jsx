@@ -17,7 +17,7 @@ export default function IndexPage() {
     dispatch(chargerDonneesMeteo('La Glacerie'))
   }, [dispatch])
   
-  //! Fermer automatiquement la prévision ouverte après 5 secondes
+  //! Fermer automatiquement la prévision ouverte après 4 secondes
   useEffect(() => {
     if (previsionOuverte === null) {
         return;
