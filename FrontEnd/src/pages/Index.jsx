@@ -44,14 +44,12 @@ export default function IndexPage() {
                     <th scope="col">Date et heure</th>
                     <th scope="col">Conditions</th>
                     <th scope="col">Température</th>
-                    <th scope="col">Min.</th>
-                    <th scope="col">Max.</th>
                     <th scope="col">Ressenti</th>
                     <th scope="col">Humidité</th>
-                    <th scope="col">Pluie (3 h)</th>
-                    <th scope="col">Neige (3 h)</th>
                     <th scope="col">Vent</th>
                     <th scope="col">Rafales</th>
+                    <th scope="col">Pluie (3 h)</th>
+                    <th scope="col">Neige (3 h)</th>
                     <th scope="col">Pression</th>
                   </tr>
                 </thead>
@@ -70,14 +68,12 @@ export default function IndexPage() {
                         {prevision.description ?? '—'}
                       </td>
                       <td>{prevision.temperature} °C</td>
-                      <td>{prevision.temp_min == null ? '—' : `${prevision.temp_min} °C`}</td>
-                      <td>{prevision.temp_max == null ? '—' : `${prevision.temp_max} °C`}</td>
                       <td>{prevision.feels_like == null ? '—' : `${prevision.feels_like} °C`}</td>
                       <td>{prevision.humidite} %</td>
-                      <td>{prevision.precipitation} mm</td>
-                      <td>{prevision.snow} cm</td>
                       <td>{prevision.vent == null ? '—' : `${prevision.vent.toFixed(1)} km/h`}</td>
                       <td>{prevision.wind_gust == null ? '—' : `${prevision.wind_gust.toFixed(1)} km/h`}</td>
+                      <td>{prevision.precipitation} mm</td>
+                      <td>{prevision.snow} cm</td>
                       <td>{prevision.pressure == null ? '—' : `${prevision.pressure} hPa`}</td>
                     </tr>
                   ))}
