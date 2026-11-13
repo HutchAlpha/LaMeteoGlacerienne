@@ -17,6 +17,21 @@ export default function IndexPage() {
     dispatch(chargerDonneesMeteo('La Glacerie'))
   }, [dispatch])
   
+  //! Fermer automatiquement la prévision ouverte après 5 secondes
+  useEffect(() => {
+    if (previsionOuverte === null) {
+        return;
+    }
+
+    const timeoutId = setTimeout(() => {
+        setPrevisionOuverte(null);
+    }, 4000);
+
+    return () => {
+        clearTimeout(timeoutId);
+    };
+}, [previsionOuverte]);
+
   return (
     <section className="index">
       <h1 className="index__h1">L’horizon Glacérienne</h1>
@@ -61,24 +76,24 @@ export default function IndexPage() {
                       <td>{new Date(prevision.date).toLocaleString('fr-FR')}</td>
                       <td>
                           {prevision.weather_icon && (
-                            <button
-                              className="index__IconMeteoLink"
-                              type="button"
-                              aria-expanded={previsionOuverte === prevision.date}
-                              onClick={() => {
+                          <button
+                            className="index__IconMeteoLink"
+                            type="button"
+                            aria-expanded={previsionOuverte === prevision.date}
+                            onClick={() => {
                                 setPrevisionOuverte((dateActuelle) =>
-                                  dateActuelle === prevision.date
-                                      ? null
-                                      : prevision.date
+                                    dateActuelle === prevision.date
+                                        ? null
+                                        : prevision.date
                                 );
-                              }}
-                            >
-                              <img
-                                className="index__weatherIcon"
-                                src={`https://openweathermap.org/img/wn/${prevision.weather_icon}.png`}
-                                alt={`Détails météo : ${prevision.description ?? 'conditions indisponibles'}`}
-                              />
-                            </button>
+                            }}
+                          >
+                            <img
+                              className="index__weatherIcon"
+                              src={`https://openweathermap.org/img/wn/${prevision.weather_icon}.png`}
+                              alt={`Détails météo : ${prevision.description ?? 'conditions indisponibles'}`}
+                            />
+                          </button>
                           )}
 
                           {(previsionOuverte === prevision.date || !prevision.weather_icon) && (
