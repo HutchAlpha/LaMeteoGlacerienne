@@ -97,8 +97,7 @@ const previsionsParJour = previsionsDuJour.reduce((groupes, prevision) => {
                 <tbody>
                   {previsionsDuJour.map((prevision) => (
                     <tr className="index__tr" key={prevision.date}>
-                      <td>{new Date(prevision.date).toLocaleString('fr-FR')}</td>
-                      <td>
+                    {new Date(prevision.date).toLocaleTimeString('fr-FR', {timeZone: 'Europe/Paris',hour: '2-digit',minute: '2-digit'}).replace(':', 'h')}<td>
                           {prevision.weather_icon && (
                           <button
                             className="index__IconMeteoLink"
