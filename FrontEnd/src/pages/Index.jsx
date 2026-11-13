@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { chargerDonneesMeteo } from "../store/slices/meteoSlice.js";
@@ -10,11 +10,13 @@ import "../styles/_index.scss";
 export default function IndexPage() {
   const dispatch = useDispatch()
   const { ville, donnees, status, erreur, prochaineActualisation } = useSelector((state) => state.meteo)
-
+  
+  const [previsionOuverte, setPrevisionOuverte] = useState(null);
+  
   useEffect(() => {
     dispatch(chargerDonneesMeteo('La Glacerie'))
   }, [dispatch])
-
+  
   return (
     <section className="index">
       <h1 className="index__h1">L’horizon Glacérienne</h1>
@@ -58,15 +60,33 @@ export default function IndexPage() {
                     <tr className="index__tr" key={prevision.date}>
                       <td>{new Date(prevision.date).toLocaleString('fr-FR')}</td>
                       <td>
-                        {prevision.weather_icon && (
-                          <img
-                            className="index__weatherIcon"
-                            src={`https://openweathermap.org/img/wn/${prevision.weather_icon}.png`}
-                            alt=""
-                          />
-                        )}
-                        {prevision.description ?? '—'}
-                      </td>
+                          {prevision.weather_icon && (
+                            <button
+                              className="index__IconMeteoLink"
+                              type="button"
+                              aria-expanded={previsionOuverte === prevision.date}
+                              onClick={() => {
+                                setPrevisionOuverte((dateActuelle) =>
+                                  dateActuelle === prevision.date
+                                      ? null
+                                      : prevision.date
+                                );
+                              }}
+                            >
+                              <img
+                                className="index__weatherIcon"
+                                src={`https://openweathermap.org/img/wn/${prevision.weather_icon}.png`}
+                                alt={`Détails météo : ${prevision.description ?? 'conditions indisponibles'}`}
+                              />
+                            </button>
+                          )}
+
+                          {(previsionOuverte === prevision.date || !prevision.weather_icon) && (
+                              <p className="index__weatherDescription">
+                                  {prevision.description ?? '—'}
+                              </p>
+                          )}
+                        </td>
                       <td>{prevision.temperature} °C</td>
                       <td>{prevision.feels_like == null ? '—' : `${prevision.feels_like} °C`}</td>
                       <td>{prevision.humidite} %</td>
